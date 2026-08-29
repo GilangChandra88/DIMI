@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DIMI",
+  "version": "0.1.0",
+  "identifier": "com.dimi.app",
+  "build": {
+    "frontendDist": "../src",
+    "devUrl": "http://127.0.0.1:8000/super-admin"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "DIMI - Data Information & Management Imigrasi",
+        "width": 1400,
+        "height": 900,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "resources/**/*"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRBRjE2QUVCMDRENDM3OUIKUldTYk45UUU2MnJ4U25SbXhOVDlyRVpMenlTZ3M3UUc2NzY3a1YycXoxeVcyZHg3Z0Q3dEVVM0QK",
+      "endpoints": [
+        "https://raw.githubusercontent.com/GilangChandra/DIMI/main/updater.json"
+      ]
+    }
+  }
+}
