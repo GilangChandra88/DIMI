@@ -238,42 +238,6 @@ pub fn run() {
                 let _ = window.navigate("http://127.0.0.1:8000/".parse().unwrap());
             });
 
-            Ok(())
-        })
-        .on_window_event(|window, event| {
-            // Matikan PHP server saat window ditutup
-            if let tauri::WindowEvent::Destroyed = event {
-                // Jangan bunuh backend jika window yang ditutup adalah settings
-                if window.label() == "settings" {
-                    return;
-                }
-                
-                let app = window.app_handle();
-                if let Some(state) = app.try_state::<PhpProcess>() {
-                    if let Ok(mut guard) = state.0.lock() {
-                        if let Some(mut child) = guard.take() {
-                            println!("[DIMI] Stopping PHP server...");
-                            let _ = child.kill();
-                            let _ = child.wait();
-                            println!("[DIMI] PHP server stopped.");
-                        }
-                    }
-                }
-                if let Some(state) = app.try_state::<NgrokProcess>() {
-                    if let Ok(mut guard) = state.0.lock() {
-                        if let Some(mut child) = guard.take() {
-                            println!("[DIMI] Stopping Ngrok...");
-                            let _ = child.kill();
-                            let _ = child.wait();
-                            println!("[DIMI] Ngrok stopped.");
-                        }
-                    }
-                }
-            }
-        })
-        .invoke_handler(tauri::generate_handler![startngrok, stopngrok, check_update, install_update])
-        .manage(NgrokProcess(Mutex::new(None)))
-        .setup(|app| {
             use tauri::menu::{Menu, MenuItem};
             use tauri::tray::TrayIconBuilder;
             
@@ -320,9 +284,42 @@ pub fn run() {
                     _ => {}
                 })
                 .build(app)?;
-                
+
             Ok(())
         })
+        .on_window_event(|window, event| {
+            // Matikan PHP server saat window ditutup
+            if let tauri::WindowEvent::Destroyed = event {
+                // Jangan bunuh backend jika window yang ditutup adalah settings
+                if window.label() == "settings" {
+                    return;
+                }
+                
+                let app = window.app_handle();
+                if let Some(state) = app.try_state::<PhpProcess>() {
+                    if let Ok(mut guard) = state.0.lock() {
+                        if let Some(mut child) = guard.take() {
+                            println!("[DIMI] Stopping PHP server...");
+                            let _ = child.kill();
+                            let _ = child.wait();
+                            println!("[DIMI] PHP server stopped.");
+                        }
+                    }
+                }
+                if let Some(state) = app.try_state::<NgrokProcess>() {
+                    if let Ok(mut guard) = state.0.lock() {
+                        if let Some(mut child) = guard.take() {
+                            println!("[DIMI] Stopping Ngrok...");
+                            let _ = child.kill();
+                            let _ = child.wait();
+                            println!("[DIMI] Ngrok stopped.");
+                        }
+                    }
+                }
+            }
+        })
+        .invoke_handler(tauri::generate_handler![startngrok, stopngrok, check_update, install_update])
+        .manage(NgrokProcess(Mutex::new(None)))
         .run(tauri::generate_context!())
         .expect("error while running DIMI");
 }

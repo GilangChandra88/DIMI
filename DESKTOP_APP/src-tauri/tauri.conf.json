@@ -1,11 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DIMI",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "identifier": "com.dimi.app",
   "build": {
-    "frontendDist": "../src",
-    "devUrl": "http://127.0.0.1:8000/super-admin"
+    "frontendDist": "../src"
   },
   "app": {
     "withGlobalTauri": true,
