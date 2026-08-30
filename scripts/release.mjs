@@ -105,7 +105,7 @@ console.log(`\n🌐 Mendorong (Pushing) ke GitHub...`);
 try {
   execSync('git add .', { cwd: rootDir, stdio: 'inherit' });
   execSync(`git commit -m "🚀 Release v${newVersion}"`, { cwd: rootDir, stdio: 'inherit' });
-  execSync('git push origin main', { cwd: rootDir, stdio: 'inherit' });
+  execSync('git push origin HEAD', { cwd: rootDir, stdio: 'inherit' });
   console.log(`✅ Push berhasil!`);
 } catch (error) {
   console.error("⚠️ Push ke Git gagal (mungkin tidak ada perubahan yang di-commit, atau belum ada repo/koneksi internet).");
