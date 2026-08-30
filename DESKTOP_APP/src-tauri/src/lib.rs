@@ -70,6 +70,27 @@ fn stopngrok(state: State<'_, NgrokProcess>) -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+async fn check_update(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    match updater.check().await {
+        Ok(Some(update)) => Ok(Some(update.version.clone())),
+        Ok(None) => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    if let Ok(Some(update)) = updater.check().await {
+        update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -222,6 +243,11 @@ pub fn run() {
         .on_window_event(|window, event| {
             // Matikan PHP server saat window ditutup
             if let tauri::WindowEvent::Destroyed = event {
+                // Jangan bunuh backend jika window yang ditutup adalah settings
+                if window.label() == "settings" {
+                    return;
+                }
+                
                 let app = window.app_handle();
                 if let Some(state) = app.try_state::<PhpProcess>() {
                     if let Ok(mut guard) = state.0.lock() {
@@ -245,8 +271,58 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![startngrok, stopngrok])
+        .invoke_handler(tauri::generate_handler![startngrok, stopngrok, check_update, install_update])
         .manage(NgrokProcess(Mutex::new(None)))
+        .setup(|app| {
+            use tauri::menu::{Menu, MenuItem};
+            use tauri::tray::TrayIconBuilder;
+            
+            let quit_i = MenuItem::with_id(app, "quit", "Keluar", true, None::<&str>)?;
+            let settings_i = MenuItem::with_id(app, "settings", "Pengaturan & Update", true, None::<&str>)?;
+            let show_i = MenuItem::with_id(app, "show", "Buka DIMI", true, None::<&str>)?;
+            
+            let menu = Menu::with_items(app, &[&show_i, &settings_i, &quit_i])?;
+            
+            let icon = app.default_window_icon().cloned().unwrap_or_else(|| {
+                // Fallback icon if default is not available
+                tauri::image::Image::new_owned(vec![0; 4], 1, 1)
+            });
+
+            TrayIconBuilder::new()
+                .menu(&menu)
+                .icon(icon)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "settings" => {
+                        if let Some(window) = app.get_webview_window("settings") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        } else {
+                            let _ = tauri::WebviewWindowBuilder::new(
+                                app,
+                                "settings",
+                                tauri::WebviewUrl::App("settings.html".into()),
+                            )
+                            .title("Pengaturan & Update DIMI")
+                            .inner_size(600.0, 500.0)
+                            .resizable(false)
+                            .build();
+                        }
+                    }
+                    _ => {}
+                })
+                .build(app)?;
+                
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running DIMI");
 }
