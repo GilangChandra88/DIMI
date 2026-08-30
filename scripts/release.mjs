@@ -111,7 +111,74 @@ try {
   console.error("⚠️ Push ke Git gagal (mungkin tidak ada perubahan yang di-commit, atau belum ada repo/koneksi internet).");
 }
 
-console.log(`\n🎉 SELESAI! Release v${newVersion} sukses diproses.`);
-console.log(`\n⚠️ PENTING: Langkah terakhir Anda adalah mengunggah (upload) file installer berikut:`);
-console.log(`👉 ${path.join(sigDir, zipUrlName)}`);
-console.log(`Ke dalam halaman 'Releases' di GitHub: https://github.com/GilangChandra88/DIMI/releases/new dengan tag v${newVersion}`);
+// 5. Buat GitHub Release dan Upload Installer (Jika GITHUB_TOKEN tersedia)
+const githubToken = process.env.GITHUB_TOKEN;
+const githubRepo = "GilangChandra88/DIMI";
+
+console.log(`\n🎉 SELESAI! Release v${newVersion} sukses diproses di sisi lokal.`);
+
+if (githubToken) {
+  console.log(`\n📦 Mengotomatisasi GitHub Release v${newVersion}...`);
+  try {
+    // Create Release
+    const releaseRes = await fetch(`https://api.github.com/repos/${githubRepo}/releases`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${githubToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tag_name: `v${newVersion}`,
+        name: `DIMI v${newVersion}`,
+        body: `Release otomatis DIMI v${newVersion}`,
+        draft: false,
+        prerelease: false
+      })
+    });
+    
+    if (!releaseRes.ok) {
+      const errorText = await releaseRes.text();
+      throw new Error(`Gagal membuat release: ${releaseRes.status} - ${errorText}`);
+    }
+    const releaseData = await releaseRes.json();
+    console.log(`✅ Release berhasil dibuat! URL: ${releaseData.html_url}`);
+    
+    // Upload Installer
+    const assetPath = path.join(sigDir, zipUrlName);
+    console.log(`📤 Mengunggah installer: ${zipUrlName}... (Mungkin butuh waktu beberapa menit)`);
+    const assetSize = fs.statSync(assetPath).size;
+    const fileBuffer = fs.readFileSync(assetPath);
+    
+    const uploadRes = await fetch(`https://uploads.github.com/repos/${githubRepo}/releases/${releaseData.id}/assets?name=${zipUrlName}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${githubToken}`,
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': assetSize.toString()
+      },
+      body: fileBuffer
+    });
+    
+    if (!uploadRes.ok) {
+      const errorText = await uploadRes.text();
+      throw new Error(`Gagal mengunggah asset: ${uploadRes.status} - ${errorText}`);
+    }
+    
+    console.log(`✅ Installer berhasil diunggah secara otomatis! 🚀`);
+  } catch (error) {
+    console.error(`❌ Terjadi kesalahan saat integrasi GitHub Release: ${error.message}`);
+    console.log(`\n⚠️ Silakan upload secara manual file installer berikut:`);
+    console.log(`👉 ${path.join(sigDir, zipUrlName)}`);
+    console.log(`Ke: https://github.com/GilangChandra88/DIMI/releases/new dengan tag v${newVersion}`);
+  }
+} else {
+  console.log(`\n⚠️ GITHUB_TOKEN tidak ditemukan di environment.`);
+  console.log(`Untuk mengaktifkan unggahan rilis otomatis, buat Personal Access Token (PAT) di GitHub dengan akses 'repo' dan jalankan perintah dengan token tersebut.`);
+  console.log(`Contoh di PowerShell:`);
+  console.log(`$env:GITHUB_TOKEN="ghp_xxxx..." ; npm run release patch`);
+  console.log(`\n👉 Sementara itu, unggah manual installer berikut:`);
+  console.log(`👉 ${path.join(sigDir, zipUrlName)}`);
+  console.log(`Ke: https://github.com/GilangChandra88/DIMI/releases/new dengan tag v${newVersion}`);
+}
