@@ -111,6 +111,15 @@ function App() {
           <button className="btn btn-secondary" onClick={() => window.location.href = 'http://127.0.0.1:8000/super-admin'} style={{ backgroundColor: 'var(--surface)', color: 'var(--text-muted)' }}>
             🔧 Mode Admin (ERD)
           </button>
+          <button className="btn btn-secondary" onClick={() => {
+            if (window.__TAURI__) {
+              window.__TAURI__.core.invoke('open_settings_window').catch(console.error);
+            } else {
+              alert("Pengaturan hanya tersedia di aplikasi Desktop.");
+            }
+          }}>
+            ⚙️ Pengaturan
+          </button>
           <button className="btn btn-secondary" onClick={() => setIsSyncOpen(true)}>
             🔄 Sinkronisasi Node
           </button>

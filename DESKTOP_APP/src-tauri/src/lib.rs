@@ -91,6 +91,24 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn open_settings_window(app: tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("settings") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    } else {
+        let _ = tauri::WebviewWindowBuilder::new(
+            &app,
+            "settings",
+            tauri::WebviewUrl::App("settings.html".into()),
+        )
+        .title("Pengaturan & Update DIMI")
+        .inner_size(600.0, 500.0)
+        .resizable(false)
+        .build();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -318,7 +336,7 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![startngrok, stopngrok, check_update, install_update])
+        .invoke_handler(tauri::generate_handler![startngrok, stopngrok, check_update, install_update, open_settings_window])
         .manage(NgrokProcess(Mutex::new(None)))
         .run(tauri::generate_context!())
         .expect("error while running DIMI");
