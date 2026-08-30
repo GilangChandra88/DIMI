@@ -2,6 +2,6 @@
   "name": "dimi-root",
   "private": true,
   "scripts": {
-    "release": "node scripts/release.mjs"
+    "release": "node --env-file=.env scripts/release.mjs"
   }
 }
