@@ -11,12 +11,19 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\DynamicApiController;
 use App\Http\Controllers\SyncController;
 
+use App\Http\Controllers\LogicController;
+
 // Endpoint CRUD Pegawai
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::post('/pegawai', [PegawaiController::class, 'store']);
 Route::get('/pegawai/{id}', [PegawaiController::class, 'show']);
 Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
 Route::delete('/pegawai/{id}', [PegawaiController::class, 'destroy']);
+
+// Endpoint Logic Hooks (DIMI BaaS)
+Route::get('/system/tables', [LogicController::class, 'getTables']);
+Route::get('/system/hooks/{table}/{event}', [LogicController::class, 'getHook']);
+Route::post('/system/hooks/{table}/{event}', [LogicController::class, 'saveHook']);
 
 // Endpoint Sinkronisasi (Node to Node)
 Route::get('/system/ip', [SyncController::class, 'getLocalIp']);

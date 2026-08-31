@@ -28,6 +28,21 @@ class DynamicApiController extends Controller
         }
     }
 
+    private function runHook($table, $event, &$data = null, $id = null)
+    {
+        $hookPath = storage_path("app/hooks/{$table}_{$event}.php");
+        if (file_exists($hookPath)) {
+            try {
+                // By using require, the script has access to $table, $event, $data (by ref), and $id.
+                // We use require instead of include so if it fails, it throws an error immediately.
+                // But catching Exception from inside the script works.
+                require $hookPath;
+            } catch (\Exception $e) {
+                throw $e;
+            }
+        }
+    }
+
     // GET: Ambil Semua Data
     public function index($table)
     {
@@ -52,7 +67,10 @@ class DynamicApiController extends Controller
         }
 
         try {
+            $this->runHook($table, 'before_insert', $data);
             $id = DB::table($table)->insertGetId($data);
+            $this->runHook($table, 'after_insert', $data, $id);
+            
             $record = DB::table($table)->find($id);
             return response()->json($record, 201);
         } catch (\Exception $e) {
@@ -91,7 +109,10 @@ class DynamicApiController extends Controller
         }
 
         try {
+            $this->runHook($table, 'before_update', $data, $id);
             DB::table($table)->where('id', $id)->update($data);
+            $this->runHook($table, 'after_update', $data, $id);
+            
             $updatedRecord = DB::table($table)->find($id);
             return response()->json($updatedRecord);
         } catch (\Exception $e) {
@@ -109,8 +130,14 @@ class DynamicApiController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
 
-        DB::table($table)->where('id', $id)->delete();
-        
-        return response()->json(['message' => 'Data berhasil dihapus']);
+        try {
+            $this->runHook($table, 'before_delete', $record, $id);
+            DB::table($table)->where('id', $id)->delete();
+            $this->runHook($table, 'after_delete', $record, $id);
+            
+            return response()->json(['message' => 'Data berhasil dihapus']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal menghapus data', 'error' => $e->getMessage()], 400);
+        }
     }
 }

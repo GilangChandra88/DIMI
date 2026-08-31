@@ -1,98 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import PegawaiList from './components/PegawaiList';
-import PegawaiForm from './components/PegawaiForm';
 import SyncModal from './components/SyncModal';
 import UpdateModal from './components/UpdateModal';
-
-// Konfigurasi URL API Backend Laravel
-const API_URL = 'http://127.0.0.1:8000/api/pegawai';
+import LogicModal from './components/LogicModal';
 
 function App() {
-  const [pegawais, setPegawais] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
-  const [editingPegawai, setEditingPegawai] = useState(null);
+  const [isLogicOpen, setIsLogicOpen] = useState(false);
   const [notification, setNotification] = useState(null);
-
-  // Fungsi untuk mengambil data dari Backend
-  const fetchPegawais = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(API_URL);
-      setPegawais(response.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      showNotification('Gagal memuat data dari server', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Panggil fetchPegawais saat komponen pertama kali dimuat
-  useEffect(() => {
-    fetchPegawais();
-  }, []);
+  const [sysStatus, setSysStatus] = useState({
+    php: 'Checking...',
+    ngrok: 'Checking...'
+  });
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleAddClick = () => {
-    setEditingPegawai(null);
-    setIsFormOpen(true);
-  };
+  useEffect(() => {
+    // Check PHP status
+    axios.get('http://127.0.0.1:8000/api/system/ip')
+      .then(() => setSysStatus(s => ({ ...s, php: 'Online' })))
+      .catch(() => setSysStatus(s => ({ ...s, php: 'Offline' })));
 
-  const handleEditClick = (pegawai) => {
-    setEditingPegawai(pegawai);
-    setIsFormOpen(true);
-  };
+    // Check Ngrok Status
+    axios.get('http://127.0.0.1:4040/api/tunnels')
+      .then(res => {
+        if(res.data && res.data.tunnels && res.data.tunnels.length > 0) {
+          setSysStatus(s => ({ ...s, ngrok: 'Online' }));
+        } else {
+          setSysStatus(s => ({ ...s, ngrok: 'Offline' }));
+        }
+      })
+      .catch(() => setSysStatus(s => ({ ...s, ngrok: 'Offline' })));
+  }, []);
 
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    setEditingPegawai(null);
-  };
-
-  const handleFormSubmit = async (formData) => {
-    try {
-      if (editingPegawai) {
-        // Update Data (PUT)
-        await axios.put(`${API_URL}/${editingPegawai.id}`, formData);
-        showNotification('Data pegawai berhasil diperbarui!');
-      } else {
-        // Tambah Data (POST)
-        await axios.post(API_URL, formData);
-        showNotification('Pegawai baru berhasil ditambahkan!');
-      }
-      handleFormClose();
-      fetchPegawais(); // Muat ulang data
-    } catch (error) {
-      console.error('Error saving data:', error);
-      showNotification('Gagal menyimpan data', 'error');
+  const openSettings = () => {
+    if (window.__TAURI__) {
+      window.__TAURI__.core.invoke('open_settings_window').catch(console.error);
+    } else {
+      alert("Pengaturan hanya tersedia di aplikasi Desktop.");
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      // Hapus Data (DELETE)
-      await axios.delete(`${API_URL}/${id}`);
-      showNotification('Data pegawai berhasil dihapus!');
-      fetchPegawais(); // Muat ulang data
-    } catch (error) {
-      console.error('Error deleting data:', error);
-      showNotification('Gagal menghapus data', 'error');
-    }
+  const handleLogicClick = () => {
+    setIsLogicOpen(true);
   };
 
   return (
-    <div className="container">
+    <div className="container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '2rem', gap: '2rem' }}>
+      
       {/* Notification Toast */}
       {notification && (
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 1100,
-          background: notification.type === 'error' ? 'var(--danger)' : 'var(--success)',
+          background: notification.type === 'error' ? 'var(--danger)' : (notification.type === 'info' ? '#3b82f6' : 'var(--success)'),
           color: 'white', padding: '1rem 1.5rem', borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)', animation: 'slideUp 0.3s ease'
         }}>
@@ -100,56 +63,77 @@ function App() {
         </div>
       )}
 
-      <header className="app-header">
-        <div>
-          <h1 className="app-title">
-            <span style={{fontSize: '2rem'}}>🛂</span> Sistem Informasi Kepegawaian
-          </h1>
-          <p className="app-subtitle">Kantor Imigrasi Kelas I TPI - Dashboard Admin HR</p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => window.location.href = 'http://127.0.0.1:8000/super-admin'} style={{ backgroundColor: 'var(--surface)', color: 'var(--text-muted)' }}>
-            🔧 Mode Admin (ERD)
-          </button>
-          <button className="btn btn-secondary" onClick={() => {
-            if (window.__TAURI__) {
-              window.__TAURI__.core.invoke('open_settings_window').catch(console.error);
-            } else {
-              alert("Pengaturan hanya tersedia di aplikasi Desktop.");
-            }
-          }}>
-            ⚙️ Pengaturan
-          </button>
-          <button className="btn btn-secondary" onClick={() => setIsSyncOpen(true)}>
-            🔄 Sinkronisasi Node
-          </button>
-          <button className="btn btn-primary" onClick={handleAddClick}>
-            ➕ Tambah Pegawai
-          </button>
-        </div>
+      <header style={{ textAlign: 'center', marginBottom: '1rem' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', background: 'linear-gradient(135deg, #60a5fa, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Dashboard DIMI
+        </h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+          Backend as a Service Platform &middot; Data Information Management Imigrasi
+        </p>
       </header>
 
-      <main className="glass-panel">
-        <PegawaiList 
-          pegawais={pegawais} 
-          isLoading={isLoading}
-          onEdit={handleEditClick}
-          onDelete={handleDelete}
-        />
+      <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', flex: 1, alignContent: 'center' }}>
+        
+        {/* Card: Modeler Database */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border)' }} 
+             onClick={() => window.location.href = 'http://127.0.0.1:8000/super-admin'}
+             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+             onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗄️</div>
+          <h2 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>Modeler Database</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Rancang arsitektur tabel database secara visual (ERD) dan dapatkan API seketika.</p>
+        </div>
+
+        {/* Card: Business Logic */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border)' }}
+             onClick={handleLogicClick}
+             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+             onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚡</div>
+          <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>Business Logic</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Kelola API Hooks, validasi data, dan script kalkulasi transaksi kustom (Segera Hadir).</p>
+        </div>
+
+        {/* Card: Sinkronisasi Ngrok */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border)' }}
+             onClick={() => setIsSyncOpen(true)}
+             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+             onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌐</div>
+          <h2 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Jaringan Publik (Ngrok)</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Ekspos API Anda ke internet agar dapat diakses dari aplikasi luar atau cabang lain.</p>
+          <div style={{ marginTop: '1rem', padding: '0.2rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', background: sysStatus.ngrok === 'Online' ? '#10b98120' : '#47556950', color: sysStatus.ngrok === 'Online' ? '#10b981' : '#94a3b8' }}>
+            Status: {sysStatus.ngrok}
+          </div>
+        </div>
+
+        {/* Card: Pengaturan Sistem */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border)' }}
+             onClick={openSettings}
+             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+             onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚙️</div>
+          <h2 style={{ color: 'var(--text)', marginBottom: '0.5rem' }}>Pengaturan Desktop</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Atur versi aplikasi, pembaruan (OTA), dan preferensi sistem utama.</p>
+        </div>
+
       </main>
 
-      {isFormOpen && (
-        <PegawaiForm 
-          initialData={editingPegawai}
-          onSubmit={handleFormSubmit}
-          onCancel={handleFormClose}
-        />
-      )}
+      <footer style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+        <p>Status API Lokal: <strong style={{ color: sysStatus.php === 'Online' ? '#10b981' : '#ef4444' }}>{sysStatus.php}</strong></p>
+      </footer>
 
       {isSyncOpen && (
         <SyncModal 
           onClose={() => setIsSyncOpen(false)}
-          onSyncComplete={fetchPegawais}
+          onSyncComplete={() => {}}
+          showNotification={showNotification}
+        />
+      )}
+
+      {isLogicOpen && (
+        <LogicModal 
+          onClose={() => setIsLogicOpen(false)}
           showNotification={showNotification}
         />
       )}
