@@ -38,7 +38,32 @@ tauriConf.version = newVersion;
 fs.writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2));
 console.log(`✅ Versi diubah menjadi v${newVersion}`);
 
-// 2. Build Aplikasi dengan Tauri & Inject Security Keys
+// 2. Sinkronisasi (Copy) Backend ke folder Resources Tauri
+console.log(`\n🔄 Menyinkronkan file Backend ke Tauri resources...`);
+const sourceBackend = path.join(rootDir, 'BACKEND_LARAVEL');
+const targetBackend = path.join(rootDir, 'DESKTOP_APP', 'src-tauri', 'resources', 'backend');
+
+// Kita hanya copy folder tertentu agar tidak terlalu besar (contoh: app, bootstrap, config, database, public, resources, routes, vendor, dll)
+// Namun, paling mudah copy semua kecuali node_modules, .git, dll.
+// Gunakan fs.cpSync yang tersedia di Node 16.7+
+try {
+  fs.cpSync(sourceBackend, targetBackend, {
+    recursive: true,
+    force: true,
+    filter: (src) => {
+      // Abaikan folder node_modules dan .git
+      const name = path.basename(src);
+      if (name === 'node_modules' || name === '.git') return false;
+      return true;
+    }
+  });
+  console.log(`✅ Sinkronisasi Backend selesai.`);
+} catch (error) {
+  console.error("❌ Gagal menyinkronkan backend:", error);
+  process.exit(1);
+}
+
+// 3. Build Aplikasi dengan Tauri & Inject Security Keys
 console.log(`\n⚙️ Menjalankan build aplikasi... (Ini mungkin memakan waktu beberapa menit)`);
 const privateKeyPath = "C:\\Users\\Gilang Chandra\\.tauri\\dimi.key";
 const privateKeyString = fs.readFileSync(privateKeyPath, 'utf8');
