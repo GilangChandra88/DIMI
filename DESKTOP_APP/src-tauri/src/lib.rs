@@ -249,13 +249,8 @@ pub fn run() {
                 }
             }
 
-            // Tunggu sebentar agar PHP server siap, lalu buka URL
-            let window = app.get_webview_window("main").unwrap();
-            std::thread::spawn(move || {
-                std::thread::sleep(std::time::Duration::from_secs(2));
-                let _ = window.navigate("http://127.0.0.1:8000/".parse().unwrap());
-            });
-
+            // Biarkan window tetap di index.html (Opening Screen)
+            // Navigasi ke PHP akan dikendalikan oleh Opening Screen setelah pengecekan selesai.
             use tauri::menu::{Menu, MenuItem};
             use tauri::tray::TrayIconBuilder;
             
@@ -275,6 +270,22 @@ pub fn run() {
                 .icon(icon)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
+                        if let Some(state) = app.try_state::<PhpProcess>() {
+                            if let Ok(mut guard) = state.0.lock() {
+                                if let Some(mut child) = guard.take() {
+                                    let _ = child.kill();
+                                    let _ = child.wait();
+                                }
+                            }
+                        }
+                        if let Some(state) = app.try_state::<NgrokProcess>() {
+                            if let Ok(mut guard) = state.0.lock() {
+                                if let Some(mut child) = guard.take() {
+                                    let _ = child.kill();
+                                    let _ = child.wait();
+                                }
+                            }
+                        }
                         app.exit(0);
                     }
                     "show" => {

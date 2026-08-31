@@ -455,7 +455,10 @@
 
             container.innerHTML = `
                 <h2 class="text-xl font-bold text-blue-400 mb-1">${tableName}</h2>
-                <p class="text-xs text-slate-400 mb-6 font-mono">${baseUrl}${endpoint}</p>
+                <div class="mb-6">
+                    <p class="text-xs text-slate-400 font-mono mb-1"><span class="text-slate-500 font-semibold">LOCAL:</span> ${baseUrl}${endpoint}</p>
+                    ${window.ngrokUrl ? `<p class="text-xs text-emerald-400 font-mono"><span class="text-emerald-600 font-semibold">PUBLIC:</span> ${window.ngrokUrl}${endpoint}</p>` : `<p class="text-[10px] text-slate-600 italic mt-1">API belum online. Gunakan "Sinkronisasi Node" di aplikasi untuk mengaktifkan Ngrok.</p>`}
+                </div>
                 <div class="mb-6"><div class="flex items-center mb-2"><span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded mr-2">GET</span><span class="text-sm text-slate-300 font-mono text-xs break-all">${endpoint}</span></div></div>
                 <div class="mb-6">
                     <div class="flex items-center mb-2"><span class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded mr-2">POST</span><span class="text-sm text-slate-300 font-mono text-xs break-all">${endpoint}</span></div>
@@ -793,8 +796,23 @@
             colIndex++;
         }
 
-        initDashboard();
-        
+        window.ngrokUrl = null;
+        async function fetchNgrokUrl() {
+            try {
+                const res = await fetch('/api/system/ngrok');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.url) {
+                        window.ngrokUrl = data.url;
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to fetch Ngrok URL", e);
+            }
+            initDashboard();
+        }
+
+        fetchNgrokUrl();
         // --- Custom Toast Notification ---
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');

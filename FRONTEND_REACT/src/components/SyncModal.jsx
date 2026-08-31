@@ -62,12 +62,8 @@ const SyncModal = ({ onClose, onSyncComplete, showNotification }) => {
     localStorage.setItem('dimi_ngrok_token', ngrokToken.trim());
 
     try {
-      // Panggil API Backend Laravel untuk menjalankan Ngrok (Bypass Tauri ACL)
-      await fetch('/api/system/start-ngrok', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: ngrokToken.trim() })
-      });
+      // Menggunakan Tauri Native Command agar tidak error di Windows
+      await window.__TAURI__.core.invoke('startngrok', { token: ngrokToken.trim() });
       
       // Polling untuk mendapatkan URL Publik Ngrok
       let attempts = 0;

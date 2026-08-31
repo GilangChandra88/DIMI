@@ -3,24 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIMI - Starting...</title>
+  <title>DIMI - System Diagnostics</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background: #0f172a;
+      color: #f8fafc;
       height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: white;
       overflow: hidden;
     }
 
     .container {
-      text-align: center;
-      animation: fadeIn 0.8s ease-out;
+      width: 100%;
+      max-width: 600px;
+      background: #1e293b;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+      animation: fadeIn 0.5s ease-out;
     }
 
     @keyframes fadeIn {
@@ -28,90 +35,422 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
     .logo {
-      font-size: 56px;
+      font-size: 42px;
       font-weight: 800;
-      background: linear-gradient(135deg, #60a5fa, #818cf8, #a78bfa);
+      background: linear-gradient(135deg, #60a5fa, #818cf8);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-      letter-spacing: 4px;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
     }
 
     .subtitle {
-      font-size: 13px;
+      font-size: 14px;
       color: #94a3b8;
-      letter-spacing: 2px;
       text-transform: uppercase;
-      margin-bottom: 48px;
+      letter-spacing: 1px;
     }
 
-    .spinner-container {
+    .check-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 16px;
+      background: #0f172a;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      transition: all 0.3s ease;
+    }
+
+    .check-item.active { border-color: #3b82f6; }
+    .check-item.success { border-color: #10b981; }
+    .check-item.error { border-color: #ef4444; }
+    .check-item.warning { border-color: #f59e0b; }
+
+    .check-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 16px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 16px;
     }
 
     .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid #334155;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #334155;
       border-top-color: #60a5fa;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .check-content { flex: 1; }
+    
+    .check-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .check-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.4;
     }
 
-    .status {
-      font-size: 14px;
-      color: #64748b;
+    .action-area {
+      margin-top: 12px;
+      display: none;
     }
 
-    .status-detail {
-      font-size: 11px;
-      color: #475569;
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    
+    .btn-outline { background: transparent; border: 1px solid #475569; color: #e2e8f0; }
+    .btn-outline:hover { background: #334155; }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ngrok-form {
+      display: flex;
+      gap: 8px;
       margin-top: 8px;
     }
+    .ngrok-input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: white;
+      font-size: 13px;
+      outline: none;
+    }
+    .ngrok-input:focus { border-color: #3b82f6; }
 
-    .dots::after {
-      content: '';
-      animation: dots 1.5s steps(4, end) infinite;
+    .footer {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
     }
 
-    @keyframes dots {
-      0% { content: ''; }
-      25% { content: '.'; }
-      50% { content: '..'; }
-      75% { content: '...'; }
+    .btn-continue {
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 8px;
+      background: #10b981;
+      color: white;
+      font-weight: bold;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: all 0.3s;
     }
+    .btn-continue.ready {
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+    }
+    .btn-continue.ready:hover { background: #059669; transform: translateY(-1px); }
 
-    .version {
-      position: fixed;
-      bottom: 16px;
-      right: 20px;
-      font-size: 11px;
-      color: #334155;
-    }
+    .svg-icon { width: 100%; height: 100%; }
+    .icon-success { color: #10b981; }
+    .icon-error { color: #ef4444; }
+    .icon-warning { color: #f59e0b; }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <div class="logo">DIMI</div>
-    <div class="subtitle">Data Information & Management Imigrasi</div>
-    
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <div class="status">Memulai server<span class="dots"></span></div>
+    <div class="header">
+      <div class="logo">DIMI</div>
+      <div class="subtitle">System Verification</div>
     </div>
-    <div class="status-detail">Menjalankan PHP & Laravel di background</div>
+
+    <div class="check-list">
+      <!-- Tauri Core -->
+      <div class="check-item success" id="item-core">
+        <div class="check-icon">
+          <svg class="svg-icon icon-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <div class="check-content">
+          <div class="check-title"><span>Sistem Inti (Tauri)</span> <span style="color:#10b981">OK</span></div>
+          <div class="check-desc">Engine desktop berjalan dengan baik.</div>
+        </div>
+      </div>
+
+      <!-- PHP Server -->
+      <div class="check-item active" id="item-php">
+        <div class="check-icon" id="icon-php"><div class="spinner"></div></div>
+        <div class="check-content">
+          <div class="check-title"><span>Server Backend (PHP)</span> <span id="status-php" style="color:#60a5fa">Memeriksa...</span></div>
+          <div class="check-desc" id="desc-php">Menunggu Localhost:8000 merespon.</div>
+          <div class="action-area" id="action-php">
+            <button class="btn btn-danger" onclick="restartApp()">Restart Sistem</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Database -->
+      <div class="check-item" id="item-db">
+        <div class="check-icon" id="icon-db"><div style="width:18px;height:18px;border-radius:50%;border:2px solid #334155"></div></div>
+        <div class="check-content">
+          <div class="check-title"><span>Database SQLite</span> <span id="status-db" style="color:#64748b">Menunggu</span></div>
+          <div class="check-desc" id="desc-db">Memastikan koneksi database stabil.</div>
+          <div class="action-area" id="action-db">
+             <button class="btn btn-danger" onclick="restartApp()">Restart Sistem</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ngrok -->
+      <div class="check-item" id="item-ngrok">
+        <div class="check-icon" id="icon-ngrok"><div style="width:18px;height:18px;border-radius:50%;border:2px solid #334155"></div></div>
+        <div class="check-content">
+          <div class="check-title"><span>Jaringan Publik (Ngrok)</span> <span id="status-ngrok" style="color:#64748b">Opsional</span></div>
+          <div class="check-desc" id="desc-ngrok">Mengizinkan akses internet publik.</div>
+          <div class="action-area" id="action-ngrok" style="display:block; margin-top:10px;">
+            <div id="ngrok-input-area" style="display:none;">
+               <div class="ngrok-form">
+                 <input type="password" id="ngrok-token" class="ngrok-input" placeholder="Masukkan Auth Token Ngrok">
+                 <button class="btn btn-primary" id="btn-start-ngrok" onclick="startNgrok()">Mulai Ngrok</button>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <button id="btn-continue" class="btn-continue" onclick="continueToApp()">Lanjutkan ke Aplikasi</button>
+    </div>
   </div>
 
-  <div class="version">v0.1.0</div>
+  <script>
+    // Constants & States
+    let isPhpReady = false;
+    let isDbReady = false;
+    
+    const icons = {
+      spinner: '<div class="spinner"></div>',
+      success: '<svg class="svg-icon icon-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+      error: '<svg class="svg-icon icon-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+      warning: '<svg class="svg-icon icon-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+    };
+
+    function updateItem(id, state, statusText, descText) {
+      const el = document.getElementById(`item-${id}`);
+      const icon = document.getElementById(`icon-${id}`);
+      const status = document.getElementById(`status-${id}`);
+      const desc = document.getElementById(`desc-${id}`);
+      const action = document.getElementById(`action-${id}`);
+
+      el.className = `check-item ${state}`;
+      
+      if(state === 'active') icon.innerHTML = icons.spinner;
+      else if(state === 'success') icon.innerHTML = icons.success;
+      else if(state === 'error') icon.innerHTML = icons.error;
+      else if(state === 'warning') icon.innerHTML = icons.warning;
+
+      if(statusText) status.innerText = statusText;
+      if(descText) desc.innerText = descText;
+
+      // Color coding status text
+      if(state==='success') status.style.color = '#10b981';
+      else if(state==='error') status.style.color = '#ef4444';
+      else if(state==='warning') status.style.color = '#f59e0b';
+      else if(state==='active') status.style.color = '#60a5fa';
+      else if(state==='') status.style.color = '#64748b';
+
+      if(state === 'error') action.style.display = 'block';
+      else if (id !== 'ngrok') action.style.display = 'none';
+    }
+
+    function evaluateContinueButton() {
+      const btn = document.getElementById('btn-continue');
+      if (isPhpReady && isDbReady) {
+        btn.classList.add('ready');
+        btn.innerText = "Lanjutkan ke Aplikasi →";
+      }
+    }
+
+    async function checkPhp() {
+      updateItem('php', 'active', 'Memeriksa...', 'Menunggu Localhost:8000 merespon.');
+      let attempts = 0;
+      
+      const interval = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/system/ip', { signal: AbortSignal.timeout(1500) });
+          if (res.ok) {
+            clearInterval(interval);
+            isPhpReady = true;
+            updateItem('php', 'success', 'OK', 'Backend siap menerima request.');
+            checkDb(); // Lanjut ke DB
+          }
+        } catch (e) {
+          if (attempts >= 15) { // 15 detik timeout
+            clearInterval(interval);
+            updateItem('php', 'error', 'Gagal', 'Server PHP tidak merespon setelah 15 detik. Klik Restart Sistem.');
+          }
+        }
+      }, 1000);
+    }
+
+    async function checkDb() {
+      updateItem('db', 'active', 'Memeriksa...', 'Menguji koneksi ke SQLite...');
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/pegawai', { signal: AbortSignal.timeout(3000) });
+        if (res.ok || res.status === 404) { // 404 berarti tabel ga ada, tapi db konek
+          isDbReady = true;
+          updateItem('db', 'success', 'OK', 'Koneksi database sukses.');
+          evaluateContinueButton();
+          checkNgrok();
+        } else {
+          updateItem('db', 'error', 'Error', 'Gagal membaca database. Pastikan file database.sqlite ada.');
+        }
+      } catch (e) {
+        updateItem('db', 'error', 'Error', 'Database timeout.');
+      }
+    }
+
+    async function checkNgrok() {
+      updateItem('ngrok', 'active', 'Memeriksa...', 'Mencari tunnel Ngrok yang aktif...');
+      try {
+        const res = await fetch('http://127.0.0.1:4040/api/tunnels', { signal: AbortSignal.timeout(2000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tunnels && data.tunnels.length > 0) {
+            updateItem('ngrok', 'success', 'Online', `URL: ${data.tunnels[0].public_url}`);
+            document.getElementById('ngrok-input-area').style.display = 'none';
+          } else {
+            throw new Error("No tunnel");
+          }
+        }
+      } catch (e) {
+        updateItem('ngrok', 'warning', 'Lokal Saja', 'Server internet tidak berjalan (Opsional).');
+        document.getElementById('ngrok-input-area').style.display = 'block';
+        
+        // Coba load token dari localStorage
+        const savedToken = localStorage.getItem('dimi_ngrok_token');
+        if(savedToken) {
+          document.getElementById('ngrok-token').value = savedToken;
+        }
+      }
+    }
+
+    async function startNgrok() {
+      const token = document.getElementById('ngrok-token').value.trim();
+      if(!token) {
+        alert("Silakan masukkan token Ngrok terlebih dahulu!");
+        return;
+      }
+
+      if(!window.__TAURI__) {
+        alert("Fitur ini hanya jalan di environment Desktop.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-start-ngrok');
+      btn.disabled = true;
+      btn.innerText = "Memulai...";
+      localStorage.setItem('dimi_ngrok_token', token);
+
+      try {
+        await window.__TAURI__.core.invoke('startngrok', { token: token });
+        
+        updateItem('ngrok', 'active', 'Memulai...', 'Sedang menghubungkan ke server Ngrok...');
+        
+        let attempts = 0;
+        const interval = setInterval(async () => {
+          attempts++;
+          try {
+            const res = await fetch('http://127.0.0.1:4040/api/tunnels', { signal: AbortSignal.timeout(1000) });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.tunnels && data.tunnels.length > 0) {
+                clearInterval(interval);
+                updateItem('ngrok', 'success', 'Online', `Berhasil! URL: ${data.tunnels[0].public_url}`);
+                document.getElementById('ngrok-input-area').style.display = 'none';
+              }
+            }
+          } catch(e) {}
+
+          if(attempts > 8) {
+            clearInterval(interval);
+            updateItem('ngrok', 'error', 'Gagal', 'Timeout. Token salah atau jaringan diblokir.');
+            document.getElementById('ngrok-input-area').style.display = 'block';
+            btn.disabled = false;
+            btn.innerText = "Coba Lagi";
+          }
+        }, 1500);
+
+      } catch (error) {
+        updateItem('ngrok', 'error', 'Gagal', `Error: ${error}`);
+        document.getElementById('ngrok-input-area').style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = "Coba Lagi";
+      }
+    }
+
+    async function restartApp() {
+      if(window.__TAURI__) {
+        await window.__TAURI__.process.restart();
+      } else {
+        location.reload();
+      }
+    }
+
+    function continueToApp() {
+      if(isPhpReady && isDbReady) {
+        window.location.href = "http://127.0.0.1:8000/";
+      }
+    }
+
+    // Initialize UI states
+    updateItem('php', '', 'Menunggu', '');
+    updateItem('db', '', 'Menunggu', '');
+    updateItem('ngrok', '', 'Opsional', '');
+
+    // Start Check
+    window.onload = () => {
+      setTimeout(checkPhp, 500);
+    };
+  </script>
 </body>
 </html>
