@@ -1,11 +1,11 @@
 {
-  "version": "0.4.4",
+  "version": "0.4.5",
   "notes": "Ini adalah versi rilis 0.1.0 (versi pertama). Silakan ubah version dan URL di bawah ini untuk rilis selanjutnya.",
-  "pub_date": "2026-08-31T00:09:04.842Z",
+  "pub_date": "2026-08-31T00:43:06.501Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTYk45UUU2MnJ4U3ZiQlZZOFM3MGVUaHBPSmxWSW4zeW4zbC92dUt5ZDRNekdVUFRRMXo1V0IyWHNWVURBakNjTTZhZ3RwQnlYZEdxUE02emdOZHhLek1RK1BmNy9Jb0E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4MDYxMzAzCWZpbGU6RElNSV8wLjIuMF94NjRfZW4tVVMubXNpCk04YmV0U0xYL0FJbVlBVWdhb2VlS0M2d29QMTJtRkp4QU5BWkhqSHB4TXE3NW5tUlFXOVp4VzRoOTdValZ6UktIbWRQL25sRURWNGlraXhOb0o5VkR3PT0K",
-      "url": "https://github.com/GilangChandra88/DIMI/releases/download/v0.4.4/DIMI_0.2.0_x64_en-US.msi"
+      "url": "https://github.com/GilangChandra88/DIMI/releases/download/v0.4.5/DIMI_0.2.0_x64_en-US.msi"
     }
   }
 }
